@@ -93,11 +93,11 @@
             box-shadow: none;
             flex: 1;
             min-height: 0;
+            position: relative; /* ancla para que los controles floten encima del video */
         }
-        /* El video ocupa todo el espacio disponible entre el borde superior y los
-           controles, en vez de forzar 16:9 (así se aprovecha bien tablet/vertical) */
+        /* El video ocupa TODA la pantalla disponible; los controles ya no le
+           quitan espacio, sino que flotan encima (como YouTube / Netflix) */
         .app.is-fullscreen .player-wrapper video {
-            flex: 1;
             width: 100%;
             height: 100%;
             min-height: 0;
@@ -105,13 +105,42 @@
             object-fit: contain;
             background: #000;
         }
+        /* La barra de controles flota sobre el video, con degradado para
+           que se lea bien encima de cualquier imagen */
         .app.is-fullscreen .controls {
-            background: rgba(0,0,0,0.85);
-            padding-bottom: max(14px, env(safe-area-inset-bottom));
-            padding-left: max(14px, env(safe-area-inset-left));
-            padding-right: max(14px, env(safe-area-inset-right));
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.55) 55%, transparent 100%);
+            backdrop-filter: none;
+            border-top: none;
+            padding-bottom: max(16px, env(safe-area-inset-bottom));
+            padding-left: max(16px, env(safe-area-inset-left));
+            padding-right: max(16px, env(safe-area-inset-right));
+            padding-top: 40px;
+            z-index: 20;
             flex-shrink: 0;
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.25s ease, transform 0.25s ease;
         }
+
+        /* ===== MOSTRAR / OCULTAR CONTROLES AL TOCAR (como YouTube) =====
+           Al maximizar, no aparece nada automáticamente: el video se ve
+           limpio de inmediato. Los controles y el botón de minimizar solo
+           aparecen al tocar/hacer clic en la pantalla, y se ocultan solos
+           después de unos segundos si el video sigue reproduciéndose. */
+        .app.is-fullscreen.controls-hidden .controls {
+            opacity: 0;
+            transform: translateY(8px);
+            pointer-events: none;
+        }
+        .app.is-fullscreen.controls-hidden .btn-minimize-float {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .app.is-fullscreen.controls-hidden { cursor: none; }
 
         /* ===== BOTÓN FLOTANTE DE MINIMIZAR ===== */
         /* Botón extra, muy visible, fijo en la esquina superior derecha.
@@ -136,7 +165,8 @@
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
-            transition: background 0.2s, transform 0.15s;
+            transition: background 0.2s, transform 0.15s, opacity 0.25s ease;
+            opacity: 1;
         }
         .btn-minimize-float:hover {
             background: rgba(180,70,255,0.35);
@@ -781,6 +811,8 @@
             let folderHandle = null;
             let fileMap = new Map();
             let manualMaximize = false; // fallback cuando la Fullscreen API nativa no funciona (p.ej. iOS Safari)
+            let controlsHideTimer = null;
+            const CONTROLS_HIDE_DELAY = 2800; // ms de inactividad antes de ocultar la barra en maximizado
 
             // ============================================================
             //  UTILS
@@ -965,6 +997,7 @@
                     isPlaying = false;
                     updatePlayButton();
                     updateProgressDisplay();
+                    showControls();
                 };
 
                 startAutoSave();
@@ -1214,9 +1247,39 @@
                 iconCompress.style.display = isFS ? 'inline-flex' : 'none';
                 const label = isFS ? 'Minimizar reproductor' : 'Maximizar reproductor';
                 fullscreenBtn.setAttribute('aria-label', label);
-                if (!isFS) {
+                if (isFS) {
+                    // Al maximizar no se muestra nada automáticamente: el video se
+                    // ve limpio de inmediato. Los controles solo salen al tocar.
+                    clearTimeout(controlsHideTimer);
+                    app.classList.add('controls-hidden');
+                } else {
+                    clearTimeout(controlsHideTimer);
+                    app.classList.remove('controls-hidden');
                     setVolumeMax();
                 }
+            }
+
+            // ============================================================
+            //  MOSTRAR / OCULTAR CONTROLES EN MAXIMIZADO (estilo YouTube)
+            // ============================================================
+            // Solo aplica cuando el reproductor está maximizado. Tocar la
+            // pantalla muestra la barra y el botón de minimizar; si el video
+            // sigue reproduciéndose y no hay más interacción, se ocultan
+            // solos poco después. En pausa se quedan visibles.
+            function showControls() {
+                if (!app.classList.contains('is-fullscreen')) return;
+                app.classList.remove('controls-hidden');
+                scheduleHideControls();
+            }
+
+            function scheduleHideControls() {
+                clearTimeout(controlsHideTimer);
+                if (!isPlaying || isDragging) return; // en pausa o arrastrando: se queda visible
+                controlsHideTimer = setTimeout(function() {
+                    if (isPlaying && !isDragging) {
+                        app.classList.add('controls-hidden');
+                    }
+                }, CONTROLS_HIDE_DELAY);
             }
 
             // ============================================================
@@ -1236,14 +1299,27 @@
                     }
                 }
                 updatePlayButton();
+                scheduleHideControls();
             });
 
             video.addEventListener('click', function() {
+                if (app.classList.contains('is-fullscreen') && app.classList.contains('controls-hidden')) {
+                    // Primer toque en maximizado: solo revela los controles,
+                    // no cambia reproducción (igual que YouTube).
+                    showControls();
+                    return;
+                }
                 playPauseBtn.click();
             });
 
+            // Mueve el mouse (escritorio): reaparecen los controles
+            container.addEventListener('mousemove', showControls);
+            document.querySelector('.controls').addEventListener('click', scheduleHideControls);
+            minimizeFloatBtn.addEventListener('pointerdown', scheduleHideControls);
+
             progressBar.addEventListener('input', function() {
                 isDragging = true;
+                clearTimeout(controlsHideTimer); // no ocultar mientras se arrastra
                 if (video.duration && isFinite(video.duration) && video.duration > 0) {
                     const time = (parseFloat(this.value) / 100) * video.duration;
                     video.currentTime = time;
@@ -1263,6 +1339,7 @@
                     updateChapterListProgress();
                 }
                 updateProgressDisplay();
+                scheduleHideControls();
             });
 
             volumeSlider.addEventListener('input', function() {
