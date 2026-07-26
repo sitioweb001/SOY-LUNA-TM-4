@@ -5,11 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Soy Luna · Volver a Rodar (T4)</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        /* ----- RESET Y DECORACIÓN (igual que antes) ----- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: radial-gradient(circle at 10% 20%, #2d1b3d 0%, #0f0718 100%);
             font-family: 'Segoe UI', Roboto, sans-serif;
@@ -38,15 +35,57 @@
             backdrop-filter: blur(16px);
             border-radius: 48px;
             padding: 30px;
-            box-shadow: 0 30px 60px -10px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(180, 70, 255, 0.2);
-            border: 1px solid rgba(200, 130, 255, 0.15);
+            box-shadow: 0 30px 60px -10px rgba(0,0,0,0.9), 0 0 0 1px rgba(180,70,255,0.2);
+            border: 1px solid rgba(200,130,255,0.15);
             position: relative;
             z-index: 1;
             transition: box-shadow 0.3s;
         }
-        .app:hover {
-            box-shadow: 0 30px 60px -10px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(180, 70, 255, 0.3), 0 0 40px rgba(180, 70, 255, 0.1);
+        .app:hover { box-shadow: 0 30px 60px -10px rgba(0,0,0,0.9), 0 0 0 1px rgba(180,70,255,0.3), 0 0 40px rgba(180,70,255,0.1); }
+
+        /* ----- OCULTAR ELEMENTOS EN PANTALLA COMPLETA ----- */
+        .app.is-fullscreen {
+            max-width: 100%;
+            padding: 0;
+            border-radius: 0;
+            background: #000;
+            box-shadow: none;
+            border: none;
+            backdrop-filter: none;
         }
+        .app.is-fullscreen .header,
+        .app.is-fullscreen .folder-selector,
+        .app.is-fullscreen .main-grid .chapter-list {
+            display: none !important;
+        }
+        .app.is-fullscreen .main-grid {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+        .app.is-fullscreen .player-fullscreen-container {
+            border-radius: 0;
+            background: #000;
+        }
+        .app.is-fullscreen .player-wrapper {
+            border-radius: 0;
+            box-shadow: none;
+        }
+        .app.is-fullscreen .controls {
+            background: rgba(0,0,0,0.8);
+        }
+
+        /* ----- CONTENEDOR PARA PANTALLA COMPLETA ----- */
+        .player-fullscreen-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background: #0d0814;
+            border-radius: 32px;
+            overflow: hidden;
+        }
+
+        /* ----- HEADER Y OTROS (sin cambios) ----- */
         .header {
             display: flex;
             align-items: center;
@@ -55,7 +94,7 @@
             gap: 15px;
             margin-bottom: 25px;
             padding-bottom: 15px;
-            border-bottom: 1px solid rgba(200, 130, 255, 0.15);
+            border-bottom: 1px solid rgba(200,130,255,0.15);
             position: relative;
         }
         .header::after {
@@ -77,7 +116,7 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            text-shadow: 0 0 40px rgba(180, 70, 255, 0.3);
+            text-shadow: 0 0 40px rgba(180,70,255,0.3);
             display: flex;
             align-items: center;
             gap: 10px;
@@ -86,40 +125,42 @@
             content: '✨';
             font-size: 1.8rem;
             -webkit-text-fill-color: initial;
-            filter: drop-shadow(0 0 10px rgba(180, 70, 255, 0.5));
+            filter: drop-shadow(0 0 10px rgba(180,70,255,0.5));
         }
         .header .badge {
-            background: linear-gradient(135deg, rgba(180, 70, 255, 0.25), rgba(130, 50, 200, 0.15));
+            background: linear-gradient(135deg, rgba(180,70,255,0.25), rgba(130,50,200,0.15));
             padding: 8px 22px;
             border-radius: 50px;
             font-size: 0.95rem;
             font-weight: 600;
-            border: 1px solid rgba(180, 70, 255, 0.3);
+            border: 1px solid rgba(180,70,255,0.3);
             backdrop-filter: blur(4px);
             color: #d4b0ff;
-            box-shadow: 0 0 20px rgba(180, 70, 255, 0.1);
+            box-shadow: 0 0 20px rgba(180,70,255,0.1);
             letter-spacing: 0.5px;
         }
+
+        /* ----- GRID PRINCIPAL ----- */
         .main-grid {
             display: grid;
             grid-template-columns: 1fr 300px;
             gap: 28px;
         }
         @media (max-width: 820px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-                gap: 30px;
-            }
-            .app {
-                padding: 20px;
-            }
+            .main-grid { grid-template-columns: 1fr; gap: 30px; }
+            .app { padding: 20px; }
         }
+
+        /* ----- PLAYER WRAPPER (dentro del contenedor) ----- */
         .player-wrapper {
             background: #0d0814;
             border-radius: 32px;
             overflow: hidden;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(180, 70, 255, 0.15);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(180,70,255,0.15);
             position: relative;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
         }
         .player-wrapper video {
             display: block;
@@ -128,13 +169,11 @@
             background: #09050e;
             cursor: pointer;
         }
-        .video-error,
-        .loading-overlay {
+
+        /* ----- ERROR Y LOADING (igual) ----- */
+        .video-error, .loading-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             display: none;
             justify-content: center;
             align-items: center;
@@ -143,46 +182,35 @@
             border-radius: 32px 32px 0 0;
         }
         .video-error {
-            background: rgba(20, 5, 30, 0.92);
+            background: rgba(20,5,30,0.92);
             color: #ff6b6b;
             padding: 30px;
             text-align: center;
             font-size: 1.1rem;
-            border: 1px solid rgba(255, 107, 107, 0.2);
+            border: 1px solid rgba(255,107,107,0.2);
             flex-direction: column;
             gap: 10px;
         }
-        .video-error.visible {
-            display: flex;
-        }
-        .video-error span {
-            color: #b8a5cf;
-            font-size: 0.9rem;
-        }
-        .loading-overlay {
-            background: rgba(0, 0, 0, 0.6);
-        }
-        .loading-overlay.visible {
-            display: flex;
-        }
+        .video-error.visible { display: flex; }
+        .video-error span { color: #b8a5cf; font-size: 0.9rem; }
+        .loading-overlay { background: rgba(0,0,0,0.6); }
+        .loading-overlay.visible { display: flex; }
         .spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid rgba(180, 70, 255, 0.15);
+            width: 60px; height: 60px;
+            border: 4px solid rgba(180,70,255,0.15);
             border-top: 4px solid #d47bff;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            box-shadow: 0 0 30px rgba(180, 70, 255, 0.2);
+            box-shadow: 0 0 30px rgba(180,70,255,0.2);
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* ----- CONTROLES ----- */
         .controls {
             padding: 14px 20px 20px;
-            background: rgba(18, 8, 28, 0.95);
+            background: rgba(18,8,28,0.95);
             backdrop-filter: blur(8px);
-            border-top: 1px solid rgba(180, 70, 255, 0.15);
+            border-top: 1px solid rgba(180,70,255,0.15);
             display: flex;
             flex-direction: column;
             gap: 12px;
@@ -200,9 +228,7 @@
             min-width: 110px;
             font-weight: 500;
         }
-        .controls-top .time span {
-            color: #f0e6f6;
-        }
+        .controls-top .time span { color: #f0e6f6; }
         .controls-top .volume-wrap {
             display: flex;
             align-items: center;
@@ -217,8 +243,9 @@
             width: 28px;
             text-align: center;
         }
+
         .btn-icon {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255,255,255,0.05);
             border: none;
             border-radius: 50%;
             width: 44px;
@@ -231,28 +258,27 @@
             cursor: pointer;
             transition: all 0.25s;
             backdrop-filter: blur(4px);
-            border: 1px solid rgba(180, 70, 255, 0.15);
+            border: 1px solid rgba(180,70,255,0.15);
         }
         .btn-icon:hover {
-            background: rgba(180, 70, 255, 0.25);
+            background: rgba(180,70,255,0.25);
             transform: scale(1.08);
-            border-color: rgba(180, 70, 255, 0.4);
-            box-shadow: 0 0 25px rgba(180, 70, 255, 0.15);
+            border-color: rgba(180,70,255,0.4);
+            box-shadow: 0 0 25px rgba(180,70,255,0.15);
         }
-        .btn-icon:active {
-            transform: scale(0.95);
-        }
+        .btn-icon:active { transform: scale(0.95); }
         .btn-icon.play-btn {
             width: 52px;
             height: 52px;
             font-size: 1.8rem;
-            background: rgba(180, 70, 255, 0.2);
-            border-color: rgba(180, 70, 255, 0.3);
+            background: rgba(180,70,255,0.2);
+            border-color: rgba(180,70,255,0.3);
         }
         .btn-icon.play-btn:hover {
-            background: rgba(180, 70, 255, 0.35);
-            box-shadow: 0 0 30px rgba(180, 70, 255, 0.2);
+            background: rgba(180,70,255,0.35);
+            box-shadow: 0 0 30px rgba(180,70,255,0.2);
         }
+
         .progress-wrap {
             display: flex;
             align-items: center;
@@ -277,14 +303,14 @@
             height: 18px;
             border-radius: 50%;
             background: radial-gradient(circle, #d47bff, #a855f7);
-            box-shadow: 0 0 20px rgba(180, 70, 255, 0.5);
+            box-shadow: 0 0 20px rgba(180,70,255,0.5);
             border: 2px solid #1c0f2b;
             transition: 0.15s;
             cursor: pointer;
         }
         .progress-wrap input[type="range"]::-webkit-slider-thumb:hover {
             transform: scale(1.15);
-            box-shadow: 0 0 30px rgba(180, 70, 255, 0.7);
+            box-shadow: 0 0 30px rgba(180,70,255,0.7);
         }
         .progress-wrap input[type="range"]::-moz-range-thumb {
             width: 18px;
@@ -307,29 +333,23 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
+
+        /* ----- LISTA DE CAPÍTULOS ----- */
         .chapter-list {
-            background: rgba(18, 8, 28, 0.6);
+            background: rgba(18,8,28,0.6);
             border-radius: 32px;
             padding: 18px 14px 14px;
             backdrop-filter: blur(8px);
-            border: 1px solid rgba(180, 70, 255, 0.1);
+            border: 1px solid rgba(180,70,255,0.1);
             max-height: 540px;
             overflow-y: auto;
             scrollbar-width: thin;
             scrollbar-color: #8b5cf6 transparent;
-            box-shadow: inset 0 0 30px rgba(180, 70, 255, 0.03);
+            box-shadow: inset 0 0 30px rgba(180,70,255,0.03);
         }
-        .chapter-list::-webkit-scrollbar {
-            width: 5px;
-        }
-        .chapter-list::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .chapter-list::-webkit-scrollbar-thumb {
-            background: #8b5cf6;
-            border-radius: 20px;
-            box-shadow: 0 0 15px rgba(180, 70, 255, 0.2);
-        }
+        .chapter-list::-webkit-scrollbar { width: 5px; }
+        .chapter-list::-webkit-scrollbar-track { background: transparent; }
+        .chapter-list::-webkit-scrollbar-thumb { background: #8b5cf6; border-radius: 20px; box-shadow: 0 0 15px rgba(180,70,255,0.2); }
         .chapter-list h2 {
             font-size: 0.75rem;
             font-weight: 700;
@@ -350,17 +370,16 @@
             transition: all 0.2s;
             border: 1px solid transparent;
             margin-bottom: 4px;
-            position: relative;
         }
         .chapter-item:hover {
-            background: rgba(180, 70, 255, 0.10);
-            border-color: rgba(180, 70, 255, 0.15);
+            background: rgba(180,70,255,0.10);
+            border-color: rgba(180,70,255,0.15);
             transform: translateX(4px);
         }
         .chapter-item.active {
-            background: rgba(180, 70, 255, 0.18);
-            border-color: rgba(180, 70, 255, 0.3);
-            box-shadow: 0 0 25px rgba(180, 70, 255, 0.08);
+            background: rgba(180,70,255,0.18);
+            border-color: rgba(180,70,255,0.3);
+            box-shadow: 0 0 25px rgba(180,70,255,0.08);
         }
         .chapter-item .num {
             font-weight: 700;
@@ -381,30 +400,31 @@
             width: 28px;
             text-align: center;
             flex-shrink: 0;
-            transition: transform 0.2s;
         }
         .chapter-item .status-icon.checked {
             color: #4ade80;
-            text-shadow: 0 0 20px rgba(74, 222, 128, 0.3);
+            text-shadow: 0 0 20px rgba(74,222,128,0.3);
         }
         .chapter-item .status-icon.pending {
             color: #8b7aa3;
             font-size: 0.9rem;
         }
+
+        /* ----- SELECTOR DE CARPETA ----- */
         .folder-selector {
             display: flex;
             align-items: center;
             gap: 12px;
             margin-bottom: 15px;
             flex-wrap: wrap;
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255,255,255,0.03);
             padding: 10px 16px;
             border-radius: 20px;
-            border: 1px solid rgba(180, 70, 255, 0.1);
+            border: 1px solid rgba(180,70,255,0.1);
         }
         .folder-selector button {
-            background: rgba(180, 70, 255, 0.2);
-            border: 1px solid rgba(180, 70, 255, 0.3);
+            background: rgba(180,70,255,0.2);
+            border: 1px solid rgba(180,70,255,0.3);
             color: #d4b0ff;
             padding: 6px 18px;
             border-radius: 30px;
@@ -415,8 +435,8 @@
             backdrop-filter: blur(4px);
         }
         .folder-selector button:hover {
-            background: rgba(180, 70, 255, 0.35);
-            box-shadow: 0 0 20px rgba(180, 70, 255, 0.15);
+            background: rgba(180,70,255,0.35);
+            box-shadow: 0 0 20px rgba(180,70,255,0.15);
         }
         .folder-selector .folder-path {
             font-size: 0.8rem;
@@ -430,8 +450,8 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            background: rgba(74, 222, 128, 0.1);
-            border: 1px solid rgba(74, 222, 128, 0.2);
+            background: rgba(74,222,128,0.1);
+            border: 1px solid rgba(74,222,128,0.2);
             color: #4ade80;
             padding: 4px 12px;
             border-radius: 30px;
@@ -439,53 +459,25 @@
             font-weight: 500;
             margin-left: 10px;
         }
+
+        /* ----- RESPONSIVE ----- */
         @media (max-width: 480px) {
-            .header h1 {
-                font-size: 1.5rem;
-            }
-            .header h1::before {
-                font-size: 1.2rem;
-            }
-            .controls-top .time {
-                font-size: 0.75rem;
-                min-width: 80px;
-            }
-            .btn-icon {
-                width: 38px;
-                height: 38px;
-                font-size: 1.1rem;
-            }
-            .btn-icon.play-btn {
-                width: 46px;
-                height: 46px;
-                font-size: 1.4rem;
-            }
-            .chapter-item .title {
-                font-size: 0.85rem;
-            }
-            .chapter-item .status-icon {
-                font-size: 1rem;
-                width: 24px;
-            }
-            .controls-top .volume-wrap input[type="range"] {
-                width: 50px;
-            }
-            .folder-selector {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .folder-selector .folder-path {
-                white-space: normal;
-            }
+            .header h1 { font-size: 1.5rem; }
+            .header h1::before { font-size: 1.2rem; }
+            .controls-top .time { font-size: 0.75rem; min-width: 80px; }
+            .btn-icon { width: 38px; height: 38px; font-size: 1.1rem; }
+            .btn-icon.play-btn { width: 46px; height: 46px; font-size: 1.4rem; }
+            .chapter-item .title { font-size: 0.85rem; }
+            .chapter-item .status-icon { font-size: 1rem; width: 24px; }
+            .controls-top .volume-wrap input[type="range"] { width: 50px; }
+            .folder-selector { flex-direction: column; align-items: stretch; }
+            .folder-selector .folder-path { white-space: normal; }
         }
-        .icon-emoji {
-            font-size: 1.2rem;
-            line-height: 1;
-        }
+        .icon-emoji { font-size: 1.2rem; line-height: 1; }
     </style>
 </head>
 <body>
-    <div class="app" role="main">
+    <div class="app" id="app" role="main">
         <header class="header">
             <h1>Soy Luna · Volver a Rodar</h1>
             <span class="badge">✦ Temporada 4 · 12 capítulos</span>
@@ -494,44 +486,47 @@
         <div class="folder-selector">
             <button id="selectFolderBtn">📁 Seleccionar carpeta de videos</button>
             <span class="folder-path" id="folderPath">Usando GitHub Releases (CP1.mp4 - CP12.mp4)</span>
-            <span class="release-notice">☁️ v1.0.0 POWERBY : EMERSON CASTRO </span>
+            <span class="release-notice">☁️ v1.0.0</span>
         </div>
 
         <div class="main-grid">
-            <section class="player-wrapper">
-                <div class="loading-overlay" id="loadingOverlay">
-                    <div class="spinner"></div>
-                </div>
-                <video id="videoPlayer" preload="metadata" playsinline></video>
-                <div class="video-error" id="videoError">
-                    ⚠️ No se pudo cargar el video
-                    <span>Verifica el enlace de GitHub Releases o selecciona una carpeta local.</span>
-                </div>
-
-                <div class="controls">
-                    <div class="progress-wrap">
-                        <input type="range" id="progressBar" value="0" step="0.001" aria-label="Barra de progreso">
-                        <span class="time-label" id="currentTimeDisplay">0:00</span>
+            <!-- CONTENEDOR PARA PANTALLA COMPLETA -->
+            <div class="player-fullscreen-container" id="playerFullscreenContainer">
+                <section class="player-wrapper">
+                    <div class="loading-overlay" id="loadingOverlay">
+                        <div class="spinner"></div>
                     </div>
-                    <div class="controls-top">
-                        <button class="btn-icon play-btn" id="playPauseBtn" aria-label="Reproducir / Pausar">
-                            <span id="playIcon">▶</span>
-                        </button>
-                        <span class="time" id="timeDisplay">
-                            <span id="currentTimeText">0:00</span> / <span id="durationText">0:00</span>
-                        </span>
+                    <video id="videoPlayer" preload="metadata" playsinline></video>
+                    <div class="video-error" id="videoError">
+                        ⚠️ No se pudo cargar el video
+                        <span>Verifica el enlace de GitHub Releases o selecciona una carpeta local.</span>
+                    </div>
 
-                        <div class="volume-wrap" title="Volumen fijado al 100%">
-                            <span class="icon-emoji" id="volumeIcon">🔊</span>
-                            <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="1" disabled>
+                    <div class="controls">
+                        <div class="progress-wrap">
+                            <input type="range" id="progressBar" value="0" step="0.001" aria-label="Barra de progreso">
+                            <span class="time-label" id="currentTimeDisplay">0:00</span>
                         </div>
+                        <div class="controls-top">
+                            <button class="btn-icon play-btn" id="playPauseBtn" aria-label="Reproducir / Pausar">
+                                <span id="playIcon">▶</span>
+                            </button>
+                            <span class="time" id="timeDisplay">
+                                <span id="currentTimeText">0:00</span> / <span id="durationText">0:00</span>
+                            </span>
 
-                        <button class="btn-icon" id="fullscreenBtn" aria-label="Pantalla completa">
-                            <span class="icon-emoji">⛶</span>
-                        </button>
+                            <div class="volume-wrap" title="Volumen fijado al 100%">
+                                <span class="icon-emoji" id="volumeIcon">🔊</span>
+                                <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="1" disabled>
+                            </div>
+
+                            <button class="btn-icon" id="fullscreenBtn" aria-label="Pantalla completa">
+                                <span class="icon-emoji" id="fullscreenIcon">⛶</span>
+                            </button>
+                        </div>
                     </div>
-                </div>
-            </section>
+                </section>
+            </div>
 
             <aside class="chapter-list" id="chapterList">
                 <h2>📖 Capítulos</h2>
@@ -548,18 +543,16 @@
 
             // ============================================================
             //  CONFIGURACIÓN: URLs de GitHub Releases
-            //  Reemplaza "sitioweb001" y "SOY-LUNA-TM-4" si tu repositorio es diferente.
-            //  Asegúrate de que el tag (v1.0.0) coincida con tu Release.
             // ============================================================
             const RELEASE_BASE_URL =
                 'https://github.com/sitioweb001/SOY-LUNA-TM-4/releases/download/v1.0.0/';
-
-            // Genera la URL para el capítulo num
             const getReleaseUrl = (num) => `${RELEASE_BASE_URL}CP${num}.mp4`;
 
             // ============================================================
             //  DOM
             // ============================================================
+            const app = document.getElementById('app');
+            const container = document.getElementById('playerFullscreenContainer');
             const video = document.getElementById('videoPlayer');
             const playPauseBtn = document.getElementById('playPauseBtn');
             const playIcon = document.getElementById('playIcon');
@@ -570,6 +563,7 @@
             const volumeSlider = document.getElementById('volumeSlider');
             const volumeIcon = document.getElementById('volumeIcon');
             const fullscreenBtn = document.getElementById('fullscreenBtn');
+            const fullscreenIcon = document.getElementById('fullscreenIcon');
             const chapterContainer = document.getElementById('chapterContainer');
             const loadingOverlay = document.getElementById('loadingOverlay');
             const videoError = document.getElementById('videoError');
@@ -584,8 +578,9 @@
             let isDragging = false;
             let saveInterval = null;
             let shouldPlayOnLoad = false;
-            let folderHandle = null; // Para la API File System Access
-            let fileMap = new Map();  // número -> File
+            let folderHandle = null;
+            let fileMap = new Map();
+            let isFullscreen = false;
 
             // ============================================================
             //  UTILS
@@ -598,7 +593,7 @@
             }
 
             // ============================================================
-            //  LOCALSTORAGE (memoria por capítulo)
+            //  LOCALSTORAGE
             // ============================================================
             function getStoredTime(chap) {
                 const key = `sl_t4_cap${chap}_time`;
@@ -634,7 +629,7 @@
             }
 
             // ============================================================
-            //  LÓGICA "VISTO" (faltando 2 minutos)
+            //  LÓGICA "VISTO" (faltando 2 min)
             // ============================================================
             function checkAndUpdateWatched(chap, currentTime, duration) {
                 if (!duration || duration <= 0) return;
@@ -648,7 +643,7 @@
             }
 
             // ============================================================
-            //  VOLUMEN MÁXIMO FIJO
+            //  VOLUMEN MÁXIMO
             // ============================================================
             function setVolumeMax() {
                 video.volume = 1;
@@ -657,12 +652,11 @@
             }
 
             // ============================================================
-            //  CARGAR VIDEO (prioriza carpeta seleccionada, luego GitHub Releases)
+            //  CARGAR VIDEO
             // ============================================================
             function loadChapter(chap, autoPlay = false) {
                 if (chap < 1 || chap > TOTAL_CHAPTERS) return;
 
-                // Guardar estado del capítulo actual
                 if (currentChapter && video.currentTime > 0) {
                     setStoredTime(currentChapter, video.currentTime);
                     if (video.duration) {
@@ -670,7 +664,6 @@
                     }
                 }
 
-                // Limpiar eventos e intervalos
                 if (saveInterval) {
                     clearInterval(saveInterval);
                     saveInterval = null;
@@ -686,21 +679,16 @@
                 currentChapter = chap;
                 shouldPlayOnLoad = autoPlay;
 
-                // 1. Intentar usar archivo de la carpeta seleccionada (si existe)
                 let fileToLoad = null;
                 if (folderHandle && fileMap.has(chap)) {
                     fileToLoad = fileMap.get(chap);
                 }
 
                 if (fileToLoad) {
-                    // Crear URL del objeto File
                     const objectURL = URL.createObjectURL(fileToLoad);
                     console.log('Cargando desde carpeta:', fileToLoad.name);
                     video.src = objectURL;
-                    // La URL se revocará cuando cambiemos de capítulo o al recargar
-                    // Guardamos la URL para limpiar después (opcional)
                 } else {
-                    // 2. Usar GitHub Releases
                     const releaseUrl = getReleaseUrl(chap);
                     console.log('Cargando desde GitHub Releases:', releaseUrl);
                     video.src = releaseUrl;
@@ -708,7 +696,6 @@
 
                 video.load();
 
-                // Restaurar tiempo guardado
                 const savedTime = getStoredTime(chap);
                 video.currentTime = savedTime;
 
@@ -722,7 +709,6 @@
 
                 updateProgressDisplay();
 
-                // ---- EVENTOS DEL VIDEO ----
                 video.onloadedmetadata = function() {
                     loadingOverlay.classList.remove('visible');
                     const dur = video.duration;
@@ -787,7 +773,7 @@
             }
 
             // ============================================================
-            //  AUTOGUARDADO (cada 3 segundos)
+            //  AUTOGUARDADO
             // ============================================================
             function startAutoSave() {
                 if (saveInterval) clearInterval(saveInterval);
@@ -915,7 +901,7 @@
             }
 
             // ============================================================
-            //  SELECCIÓN DE CARPETA (File System Access API)
+            //  SELECCIÓN DE CARPETA
             // ============================================================
             async function selectFolder() {
                 try {
@@ -930,7 +916,6 @@
                     for await (const entry of handle.values()) {
                         if (entry.kind === 'file' && entry.name.endsWith('.mp4')) {
                             const name = entry.name;
-                            // Extraer número del nombre (busca el primer número)
                             const match = name.match(/\d+/);
                             if (match) {
                                 const num = parseInt(match[0]);
@@ -950,16 +935,42 @@
                         localStorage.removeItem('selectedFolderName');
                         return;
                     }
-                    // Mostrar nombre de carpeta
                     folderPath.textContent = `📂 ${handle.name} (${fileMap.size} videos encontrados)`;
                     localStorage.setItem('selectedFolderName', handle.name);
-                    // Recargar el capítulo actual con la nueva carpeta
                     loadChapter(currentChapter, false);
                 } catch (err) {
                     if (err.name !== 'AbortError') {
                         console.error('Error seleccionando carpeta:', err);
                         alert('Error al seleccionar la carpeta: ' + err.message);
                     }
+                }
+            }
+
+            // ============================================================
+            //  PANTALLA COMPLETA (FULLSCREEN)
+            // ============================================================
+            function toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    // Entrar en fullscreen en el contenedor del reproductor
+                    container.requestFullscreen?.() || container.webkitRequestFullscreen?.();
+                } else {
+                    document.exitFullscreen?.() || document.webkitExitFullscreen?.();
+                }
+            }
+
+            // Escuchar cambios en fullscreen
+            document.addEventListener('fullscreenchange', updateFullscreenUI);
+            document.addEventListener('webkitfullscreenchange', updateFullscreenUI);
+
+            function updateFullscreenUI() {
+                const isFS = !!document.fullscreenElement || !!document.webkitFullscreenElement;
+                app.classList.toggle('is-fullscreen', isFS);
+                fullscreenIcon.textContent = isFS ? '⛶' : '⛶'; // Podríamos cambiar a "✕" pero mejor mantener
+                // También podríamos cambiar el tooltip
+                fullscreenBtn.setAttribute('aria-label', isFS ? 'Salir de pantalla completa' : 'Pantalla completa');
+                // Reforzar volumen al salir
+                if (!isFS) {
+                    setVolumeMax();
                 }
             }
 
@@ -1013,13 +1024,7 @@
                 setVolumeMax();
             });
 
-            fullscreenBtn.addEventListener('click', function() {
-                if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen?.() || document.documentElement.webkitRequestFullscreen?.();
-                } else {
-                    document.exitFullscreen?.() || document.webkitExitFullscreen?.();
-                }
-            });
+            fullscreenBtn.addEventListener('click', toggleFullscreen);
 
             selectFolderBtn.addEventListener('click', selectFolder);
 
@@ -1028,21 +1033,17 @@
             // ============================================================
             function init() {
                 buildChapterList();
-                // Verificar si hay un nombre de carpeta guardado (solo para mostrar)
                 const storedName = getStoredFolderName();
                 if (storedName) {
                     folderPath.textContent = `📂 ${storedName} (selecciona de nuevo para usar)`;
                 }
-                // Cargar el primer capítulo desde GitHub Releases (por defecto)
                 loadChapter(1, false);
                 setVolumeMax();
                 updateDurationDisplay();
                 startAutoSave();
 
-                // Reforzar volumen máximo cada 5 segundos
                 setInterval(setVolumeMax, 5000);
 
-                // Guardar antes de cerrar
                 window.addEventListener('beforeunload', function() {
                     if (video.currentTime > 0) {
                         setStoredTime(currentChapter, video.currentTime);
