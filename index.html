@@ -335,14 +335,14 @@
             align-items: center;
             gap: 6px;
             margin-left: auto;
-            opacity: 0.6;
-            cursor: not-allowed;
+            opacity: 1;
         }
         .controls-top .volume-wrap .icon-emoji {
             font-size: 1.1rem;
             color: #d4b0ff;
             width: 24px;
             text-align: center;
+            cursor: pointer;
         }
 
         .btn-icon {
@@ -433,10 +433,35 @@
             font-weight: 500;
         }
         .controls-top .volume-wrap input[type="range"] {
-            width: 60px;
+            -webkit-appearance: none;
+            appearance: none;
+            width: 70px;
             height: 4px;
-            opacity: 0.4;
-            cursor: not-allowed;
+            border-radius: 10px;
+            background: linear-gradient(to right, #b47ae0 0%, #b47ae0 100%, #2d1b3d 100%, #2d1b3d 100%);
+            outline: none;
+            opacity: 1;
+            cursor: pointer;
+            touch-action: none;
+        }
+        .controls-top .volume-wrap input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #d47bff, #a855f7);
+            box-shadow: 0 0 10px rgba(180,70,255,0.5);
+            border: 2px solid #1c0f2b;
+            cursor: pointer;
+        }
+        .controls-top .volume-wrap input[type="range"]::-moz-range-thumb {
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #d47bff, #a855f7);
+            border: 2px solid #1c0f2b;
+            cursor: pointer;
         }
 
         /* ===== LISTA DE CAPÍTULOS ===== */
@@ -732,9 +757,9 @@
                                 <span id="currentTimeText">0:00</span> / <span id="durationText">0:00</span>
                             </span>
 
-                            <div class="volume-wrap" title="Volumen fijado al 100%">
-                                <span class="icon-emoji" id="volumeIcon">🔊</span>
-                                <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="1" disabled>
+                            <div class="volume-wrap">
+                                <span class="icon-emoji" id="volumeIcon" role="button" tabindex="0" aria-label="Silenciar / Activar sonido" title="Silenciar / Activar sonido">🔊</span>
+                                <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="1" aria-label="Volumen">
                             </div>
 
                             <button class="btn-icon" id="fullscreenBtn" aria-label="Maximizar reproductor">
@@ -875,12 +900,27 @@
             }
 
             // ============================================================
-            //  VOLUMEN MÁXIMO
+            //  VOLUMEN (inicia al máximo, pero el usuario puede ajustarlo)
             // ============================================================
-            function setVolumeMax() {
+            let lastVolumeBeforeMute = 1;
+
+            function setInitialVolume() {
                 video.volume = 1;
                 volumeSlider.value = 1;
-                volumeIcon.textContent = '🔊';
+                updateVolumeUI(1);
+            }
+
+            function updateVolumeUI(vol) {
+                volumeSlider.value = vol;
+                const percent = vol * 100;
+                volumeSlider.style.background = `linear-gradient(to right, #b47ae0 0%, #b47ae0 ${percent}%, #2d1b3d ${percent}%, #2d1b3d 100%)`;
+                if (vol == 0) {
+                    volumeIcon.textContent = '🔇';
+                } else if (vol < 0.5) {
+                    volumeIcon.textContent = '🔉';
+                } else {
+                    volumeIcon.textContent = '🔊';
+                }
             }
 
             // ============================================================
@@ -1001,7 +1041,6 @@
                 };
 
                 startAutoSave();
-                setVolumeMax();
                 updateChapterListProgress();
             }
 
@@ -1255,7 +1294,6 @@
                 } else {
                     clearTimeout(controlsHideTimer);
                     app.classList.remove('controls-hidden');
-                    setVolumeMax();
                 }
             }
 
@@ -1343,7 +1381,27 @@
             });
 
             volumeSlider.addEventListener('input', function() {
-                setVolumeMax();
+                const vol = parseFloat(this.value);
+                video.volume = vol;
+                updateVolumeUI(vol);
+                if (vol > 0) lastVolumeBeforeMute = vol;
+            });
+
+            function toggleMute() {
+                if (video.volume > 0) {
+                    lastVolumeBeforeMute = video.volume;
+                    video.volume = 0;
+                } else {
+                    video.volume = lastVolumeBeforeMute || 1;
+                }
+                updateVolumeUI(video.volume);
+            }
+            volumeIcon.addEventListener('click', toggleMute);
+            volumeIcon.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleMute();
+                }
             });
 
             fullscreenBtn.addEventListener('click', toggleFullscreen);
@@ -1363,11 +1421,9 @@
                     folderPath.textContent = 'Usando GitHub Releases (CP1.mp4 - CP12.mp4)';
                 }
                 loadChapter(1, false);
-                setVolumeMax();
+                setInitialVolume();
                 updateDurationDisplay();
                 startAutoSave();
-
-                setInterval(setVolumeMax, 5000);
 
                 window.addEventListener('beforeunload', function() {
                     if (video.currentTime > 0) {
