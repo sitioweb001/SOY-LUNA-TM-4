@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Soy Luna · Volver a Rodar (T4)</title>
     <style>
         /* ===== RESET Y DECORACIÓN ===== */
@@ -43,35 +43,109 @@
         }
         .app:hover { box-shadow: 0 30px 60px -10px rgba(0,0,0,0.9), 0 0 0 1px rgba(180,70,255,0.3), 0 0 40px rgba(180,70,255,0.1); }
 
-        /* ===== OCULTAR ELEMENTOS EN PANTALLA COMPLETA ===== */
+        /* ===== MODO MAXIMIZADO (pseudo-fullscreen fiable en tablet/móvil) ===== */
+        /* No dependemos solo de la Fullscreen API nativa (falla o es limitada en
+           muchos navegadores móviles, sobre todo iOS Safari). Este overlay fijo
+           cubre toda la pantalla siempre, y además se activa junto a la API nativa
+           cuando está disponible. Así el botón de minimizar funciona en todos lados. */
         .app.is-fullscreen {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh; /* alto real en móvil, evita saltos por la barra del navegador */
             max-width: 100%;
+            margin: 0;
             padding: 0;
             border-radius: 0;
             background: #000;
             box-shadow: none;
             border: none;
             backdrop-filter: none;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            animation: fadeInMax 0.18s ease-out;
         }
+        @keyframes fadeInMax { from { opacity: 0.4; } to { opacity: 1; } }
         .app.is-fullscreen .header,
         .app.is-fullscreen .folder-selector,
         .app.is-fullscreen .main-grid .chapter-list {
             display: none !important;
         }
         .app.is-fullscreen .main-grid {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
             grid-template-columns: 1fr;
             gap: 0;
         }
         .app.is-fullscreen .player-fullscreen-container {
             border-radius: 0;
             background: #000;
+            flex: 1;
+            min-height: 0;
+            height: auto;
         }
         .app.is-fullscreen .player-wrapper {
             border-radius: 0;
             box-shadow: none;
+            flex: 1;
+            min-height: 0;
+        }
+        /* El video ocupa todo el espacio disponible entre el borde superior y los
+           controles, en vez de forzar 16:9 (así se aprovecha bien tablet/vertical) */
+        .app.is-fullscreen .player-wrapper video {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            aspect-ratio: unset;
+            object-fit: contain;
+            background: #000;
         }
         .app.is-fullscreen .controls {
             background: rgba(0,0,0,0.85);
+            padding-bottom: max(14px, env(safe-area-inset-bottom));
+            padding-left: max(14px, env(safe-area-inset-left));
+            padding-right: max(14px, env(safe-area-inset-right));
+            flex-shrink: 0;
+        }
+
+        /* ===== BOTÓN FLOTANTE DE MINIMIZAR ===== */
+        /* Botón extra, muy visible, fijo en la esquina superior derecha.
+           Solo aparece cuando el reproductor está maximizado: es el control
+           claro y directo para "salir" que antes faltaba. */
+        .btn-minimize-float {
+            display: none;
+            position: fixed;
+            top: max(14px, env(safe-area-inset-top));
+            right: max(14px, env(safe-area-inset-right));
+            z-index: 10000;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 7, 24, 0.65);
+            border: 1px solid rgba(200,130,255,0.35);
+            color: #f0e6f6;
+            backdrop-filter: blur(6px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .btn-minimize-float:hover {
+            background: rgba(180,70,255,0.35);
+            transform: scale(1.06);
+        }
+        .btn-minimize-float:active { transform: scale(0.92); }
+        .btn-minimize-float svg { width: 20px; height: 20px; }
+        .app.is-fullscreen .btn-minimize-float {
+            display: flex;
         }
 
         /* ===== CONTENEDOR PARA PANTALLA COMPLETA ===== */
@@ -549,8 +623,8 @@
             .header h1 { font-size: 0.95rem; }
             .header .badge { font-size: 0.55rem; padding: 2px 8px; }
             .controls-top .time { font-size: 0.6rem; min-width: 60px; }
-            .btn-icon { width: 28px; height: 28px; font-size: 0.8rem; }
-            .btn-icon.play-btn { width: 34px; height: 34px; font-size: 1rem; }
+            .btn-icon { width: 34px; height: 34px; font-size: 0.9rem; }
+            .btn-icon.play-btn { width: 40px; height: 40px; font-size: 1.15rem; }
             .controls { padding: 6px 8px 8px; gap: 6px; }
             .progress-wrap input[type="range"] { height: 4px; }
             .progress-wrap input[type="range"]::-webkit-slider-thumb { width: 14px; height: 14px; }
@@ -575,15 +649,16 @@
             .folder-selector { margin-bottom: 6px; padding: 4px 8px; }
         }
 
-        /* ===== FULLSCREEN EN MÓVIL ===== */
-        .app.is-fullscreen .controls {
-            padding: 8px 12px 12px;
-        }
+        /* ===== MAXIMIZADO EN MÓVIL/TABLET: controles más grandes y fáciles de tocar ===== */
         .app.is-fullscreen .controls-top .time { font-size: 0.8rem; }
         .app.is-fullscreen .btn-icon { width: 40px; height: 40px; font-size: 1.2rem; }
         .app.is-fullscreen .btn-icon.play-btn { width: 48px; height: 48px; font-size: 1.6rem; }
         .app.is-fullscreen .progress-wrap input[type="range"] { height: 6px; }
         .app.is-fullscreen .progress-wrap input[type="range"]::-webkit-slider-thumb { width: 20px; height: 20px; }
+        @media (max-width: 768px) and (orientation: landscape) {
+            .btn-minimize-float { top: max(8px, env(safe-area-inset-top)); right: max(8px, env(safe-area-inset-right)); width: 38px; height: 38px; }
+            .btn-minimize-float svg { width: 17px; height: 17px; }
+        }
 
         .icon-emoji { font-size: 1rem; line-height: 1; }
     </style>
@@ -632,11 +707,22 @@
                                 <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="1" disabled>
                             </div>
 
-                            <button class="btn-icon" id="fullscreenBtn" aria-label="Pantalla completa">
-                                <span class="icon-emoji" id="fullscreenIcon">⛶</span>
+                            <button class="btn-icon" id="fullscreenBtn" aria-label="Maximizar reproductor">
+                                <span class="icon-emoji" id="iconExpand">
+                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H4v4M16 3h4v4M8 21H4v-4M16 21h4v-4"/></svg>
+                                </span>
+                                <span class="icon-emoji" id="iconCompress" style="display:none;">
+                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4V5M20 9h-4V5M4 15h4v4M20 15h-4v4"/></svg>
+                                </span>
                             </button>
                         </div>
                     </div>
+
+                    <!-- Botón flotante, siempre visible arriba a la derecha SOLO al maximizar.
+                         Es el control claro de "minimizar" que antes faltaba. -->
+                    <button class="btn-minimize-float" id="minimizeFloatBtn" aria-label="Minimizar reproductor">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4V5M20 9h-4V5M4 15h4v4M20 15h-4v4"/></svg>
+                    </button>
                 </section>
             </div>
 
@@ -675,7 +761,9 @@
             const volumeSlider = document.getElementById('volumeSlider');
             const volumeIcon = document.getElementById('volumeIcon');
             const fullscreenBtn = document.getElementById('fullscreenBtn');
-            const fullscreenIcon = document.getElementById('fullscreenIcon');
+            const iconExpand = document.getElementById('iconExpand');
+            const iconCompress = document.getElementById('iconCompress');
+            const minimizeFloatBtn = document.getElementById('minimizeFloatBtn');
             const chapterContainer = document.getElementById('chapterContainer');
             const loadingOverlay = document.getElementById('loadingOverlay');
             const videoError = document.getElementById('videoError');
@@ -692,6 +780,7 @@
             let shouldPlayOnLoad = false;
             let folderHandle = null;
             let fileMap = new Map();
+            let manualMaximize = false; // fallback cuando la Fullscreen API nativa no funciona (p.ej. iOS Safari)
 
             // ============================================================
             //  UTILS
@@ -1058,23 +1147,73 @@
             }
 
             // ============================================================
-            //  PANTALLA COMPLETA (FULLSCREEN)
+            //  MAXIMIZAR / MINIMIZAR REPRODUCTOR
             // ============================================================
+            // Estrategia doble para que funcione igual en tablet, teléfono y PC:
+            // 1) Si el navegador soporta la Fullscreen API nativa, se usa (oculta
+            //    la barra del navegador en Android/Chrome/Escritorio).
+            // 2) Si no está disponible o la petición falla (muy común en iOS
+            //    Safari para elementos que no son <video>), se activa un modo
+            //    "maximizado" manual: el reproductor se expande a toda la
+            //    pantalla con CSS (position: fixed), sin depender del navegador.
+            // En ambos casos el botón de la barra y el botón flotante superior
+            // cambian a un ícono de "comprimir" claro para minimizar.
+            function isNativeFullscreenSupported() {
+                return !!(container.requestFullscreen || container.webkitRequestFullscreen);
+            }
+
             function toggleFullscreen() {
-                if (!document.fullscreenElement) {
-                    container.requestFullscreen?.() || container.webkitRequestFullscreen?.();
+                const nativeActive = !!(document.fullscreenElement || document.webkitFullscreenElement);
+
+                if (nativeActive) {
+                    (document.exitFullscreen?.bind(document) || document.webkitExitFullscreen?.bind(document))();
+                    return;
+                }
+
+                if (manualMaximize) {
+                    manualMaximize = false;
+                    updateFullscreenUI();
+                    return;
+                }
+
+                if (isNativeFullscreenSupported()) {
+                    const request = container.requestFullscreen?.bind(container) || container.webkitRequestFullscreen?.bind(container);
+                    try {
+                        const result = request();
+                        if (result && typeof result.catch === 'function') {
+                            result.catch(() => {
+                                manualMaximize = true;
+                                updateFullscreenUI();
+                            });
+                        }
+                    } catch (err) {
+                        manualMaximize = true;
+                        updateFullscreenUI();
+                    }
                 } else {
-                    document.exitFullscreen?.() || document.webkitExitFullscreen?.();
+                    manualMaximize = true;
+                    updateFullscreenUI();
                 }
             }
 
             document.addEventListener('fullscreenchange', updateFullscreenUI);
             document.addEventListener('webkitfullscreenchange', updateFullscreenUI);
 
+            // Con el modo manual, "Escape" también debe minimizar (en desktop)
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && manualMaximize) {
+                    manualMaximize = false;
+                    updateFullscreenUI();
+                }
+            });
+
             function updateFullscreenUI() {
-                const isFS = !!document.fullscreenElement || !!document.webkitFullscreenElement;
+                const isFS = !!document.fullscreenElement || !!document.webkitFullscreenElement || manualMaximize;
                 app.classList.toggle('is-fullscreen', isFS);
-                fullscreenBtn.setAttribute('aria-label', isFS ? 'Salir de pantalla completa' : 'Pantalla completa');
+                iconExpand.style.display = isFS ? 'none' : 'inline-flex';
+                iconCompress.style.display = isFS ? 'inline-flex' : 'none';
+                const label = isFS ? 'Minimizar reproductor' : 'Maximizar reproductor';
+                fullscreenBtn.setAttribute('aria-label', label);
                 if (!isFS) {
                     setVolumeMax();
                 }
@@ -1131,6 +1270,7 @@
             });
 
             fullscreenBtn.addEventListener('click', toggleFullscreen);
+            minimizeFloatBtn.addEventListener('click', toggleFullscreen);
 
             selectFolderBtn.addEventListener('click', selectFolder);
 
